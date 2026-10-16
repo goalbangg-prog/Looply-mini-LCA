@@ -7,7 +7,7 @@
     names.forEach(n => L.$(n).classList.toggle('hidden', n !== name));
     const t = L.tabs[name];
     try { if (!t.built) { t.build(); t.built = true; } else L.resizeAll(L.$(name)); }
-    catch (e) { L.$(name).innerHTML = '<div class="panel"><div class="empty">화면을 만드는 중 오류가 났어요: ' + L.esc(e.message) + '</div></div>'; console.error(e); }
+    catch (e) { L.$(name).innerHTML = '<div class="panel"><div class="empty">화면을 만드는 중 오류가 발생했습니다: ' + L.esc(e.message) + '</div></div>'; console.error(e); }
     window.scrollTo(0, 0);
   }
   document.querySelectorAll('[data-tab]').forEach(b => b.addEventListener('click', () => { history.replaceState(null, '', '#' + b.dataset.tab); show(b.dataset.tab); }));
