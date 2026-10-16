@@ -118,7 +118,7 @@
       plot('exChart', picks.map((r, i) => { const p = pct(r); return { type: 'scatterpolar', mode: 'lines+markers', name: lbl(r), r: [...p, p[0]], theta: [...th, th[0]], connectgaps: false, fill: 'toself', opacity: .55, line: { color: L.COLORS[i % 6] }, hovertemplate: '%{theta}: 백분위 %{r:.0f}<extra>' + lbl(r) + '</extra>' }; }),
         { polar: { radialaxis: { range: [0, 100], tickvals: [0, 25, 50, 75, 100] } }, legend: { orientation: 'h', y: -0.12 }, margin: { l: 60, r: 60, t: 30, b: 60 } });
       $('exExtra').innerHTML = `<table class="tbl" style="margin-top:16px"><thead><tr><th>항목</th>${ks.map(k => `<th class="num">${IMP[k].name}<br><small>${IMP[k].sym}/${s.unit}</small></th>`).join('')}</tr></thead><tbody>${picks.map(r => { const p = pct(r); return `<tr><td>${esc(lbl(r))}</td>${ks.map((k, i) => `<td class="num${r.v[k] == null ? ' muted' : ''}">${r.v[k] == null ? '결측' : `${fmt(r.v[k])}<br><small class="muted">${L.topLabel(p[i])}</small>`}</td>`).join('')}</tr>`; }).join('')}</tbody></table>`;
-      R('탄소발자국은 낮은데 다른 영향이 높게 튀어나온 항목은, 탄소발자국만 볼 때 놓치는 부담이 있다는 신호입니다. 대체 소재를 비교할 때는 한쪽이 좋아지면 다른 쪽이 나빠지는 관계(trade-off)가 없는지 확인해 보세요.');
+      R('탄소발자국은 낮은데 다른 영향이 높게 튀어나온 항목은, 탄소발자국만 볼 때 놓치는 부담이 있다는 신호입니다. 대체 소재를 비교할 때는 trade-off(한쪽이 좋아지면 다른 쪽이 나빠지는 관계)가 없는지 확인하세요.');
     }
   }
   L.tabs.explore = { build, built: false };

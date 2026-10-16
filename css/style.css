@@ -186,3 +186,10 @@ input,select{transition:border-color .2s,box-shadow .2s}input:focus,select:focus
 .add-row #toast{flex:1;min-width:220px}.add-row .toast{margin:0}
 .metrics{grid-template-columns:repeat(4,1fr)}
 .pv small b{font-size:inherit}
+/* 계산 결과 구간 구분 */
+.res-sec{margin-top:40px;padding-top:28px;border-top:2px solid var(--line,#d8e2f0)}
+.res-sec>h3,.res-sec>.row>h3{font-size:21px;font-weight:800;color:var(--dark);line-height:1.4}
+.res-sec h3 small{display:block;margin-top:4px;font-size:14px;font-weight:500;color:var(--muted)}
+.res-sec>.row>h3 small{display:block}
+.hero h1{text-wrap:balance}.find h3{text-wrap:balance}
+.hero p.lead,.sec>.lead{max-width:720px}

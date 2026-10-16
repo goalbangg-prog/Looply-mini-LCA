@@ -14,7 +14,7 @@
   function build() {
     makeScopes();
     $('cluster').innerHTML = `<div class="panel"><span class="eyebrow">Cluster Analysis</span><h3>군집 분석 설정 (KMeans)</h3>
-      <p class="muted"><b>KMeans 군집 분석</b>은 값의 패턴이 비슷한 항목끼리 자동으로 묶는 방법입니다. 계수가 수십만 배까지 차이 나서 먼저 로그 변환하고 표준화(평균 0, 표준편차 1로 맞춤)한 뒤 묶습니다. 어떤 영향 종류를 쓰느냐에 따라 결과가 달라지니, 조건을 바꿔 가며 결과가 얼마나 흔들리는지 확인해 보세요.</p>
+      <p class="muted"><b>KMeans 군집 분석</b>은 값의 패턴이 비슷한 항목끼리 자동으로 묶는 방법입니다. 계수가 수십만 배까지 차이 나서 먼저 로그 변환하고 표준화(평균 0, 표준편차 1로 맞춤)한 뒤 묶습니다. 어떤 영향 종류를 쓰느냐에 따라 군집이 달라집니다. 아래에서 영향 종류와 군집 수를 바꿔 결과를 비교할 수 있습니다.</p>
       <div class="grid g2"><div><label for="clScope">① 분석 범위</label><select id="clScope"></select></div>
         <div><label for="clK">② 군집 수(k)</label><select id="clK">${[2, 3, 4, 5, 6].map(k => `<option value="${k}"${k === RES.chosen_k ? ' selected' : ''}>k = ${k}${k === RES.chosen_k ? ' (리포트 기준)' : ''}</option>`).join('')}</select></div></div>
       <div style="margin-top:16px"><label>③ 묶는 데 사용할 영향 종류 <span class="muted" style="font-weight:500">(옆의 %는 결측치 비율입니다. 고른 영향 중 하나라도 값이 비어 있는 항목은 분석에서 뺍니다)</span></label><div class="chk" id="clChecks"></div></div>
