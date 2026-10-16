@@ -2,7 +2,7 @@
 
 > **공개 환경영향계수 398개 항목을 정제하고, 계산·탐색·군집분석으로 확장한 개인 데이터 분석 포트폴리오**
 
-**[웹앱 실행하기](https://goalbangg-prog.github.io/Looply-mini-LCA/)** · [데이터 전처리 노트북](notebooks/data_preprocessing.ipynb) · [개발 변경 이력](docs/CHANGELOG.md) · [검증 기록](docs/TEST_REPORT.md)
+**[웹앱 실행하기](https://goalbangg-prog.github.io/Looply-mini-LCA/)** · [데이터 전처리 노트북](notebooks/data_preprocessing.ipynb) · [군집 분석 노트북(scikit-learn)](notebooks/kmeans_silhouette_sklearn.ipynb) · [개발 변경 이력](docs/CHANGELOG.md) · [검증 기록](docs/TEST_REPORT.md)
 
 ## 1. 프로젝트 개요
 
@@ -13,7 +13,7 @@
 | 데이터 | 한국환경산업기술원 환경성적표지 평가계수(2021-08-02 기반 정제본) |
 | 규모 | 정제 평가계수 398개 항목, 환경영향범주 5종 |
 | 공개 화면 | 분석 리포트 · 환경영향 계산 · 데이터 인사이트 · 군집 분석 |
-| 주요 도구 | Python, Pandas, NumPy, scikit-learn(프로토타입), JavaScript, Plotly.js, HTML/CSS, GitHub Pages |
+| 주요 도구 | Python, Pandas, NumPy, scikit-learn, JavaScript, Plotly.js, HTML/CSS, GitHub Pages |
 | 프로젝트 성격 | 개인 학습·취업 포트폴리오. 공식 LCA/PCF/EPD 산정·인증 서비스가 아님 |
 
 이 프로젝트는 환경영향계수를 **그대로 더하는 계산기**에서 출발하여, 동일 단위 비교·자료 범위 파악·시각화·상관관계와 군집 구조 탐색까지 확장했습니다. 분석 과정에서 **결측값의 의미, 단위의 호환성, 데이터 해석의 범위**를 특히 중요하게 다룹니다.
@@ -24,7 +24,7 @@
 스크롤 기반 서사형 데이터 분석 리포트입니다. 데이터 범위 → 평가계수 분포 → 영향범주 간 관계 → 군집 특징 → 방법론 및 한계 순으로 분석 흐름을 설명합니다. 차트 옆에 데이터 기반 해설과 용어 설명을 배치했습니다.
 
 ### ② 환경영향 계산
-활동자료 사용량을 해당 계수의 기준 단위로 변환한 뒤 영향범주별 부분 결과를 계산합니다.
+대분류 → 구분 → 소분류 순서로 항목을 고르고(이름 검색창으로 후보를 줄일 수 있음), 사용량을 해당 계수의 기준 단위로 변환한 뒤 영향범주별 부분 결과를 계산합니다. 입력 단위는 항목마다 바꿀 수 있습니다(예: kg → t).
 
 ```text
 부분 환경영향량 = (계수 기준 단위로 환산한 사용량) × (단위당 평가계수)
@@ -44,7 +44,18 @@
 표시 명칭은 **탄소발자국·자원발자국·산성화·부영양화·물발자국**으로 통일했습니다. 보조 영향 항목은 산점도에서 사용합니다.
 
 ### ④ 군집 분석
-양수·유효 평가계수를 로그 변환 및 표준화한 뒤 유사한 환경영향 특징을 묶어 탐색합니다. 군집 수(k)에 대한 실루엣 기반 추천, 군집별 특성, 대표 항목을 확인할 수 있도록 확장했습니다. **웹의 JavaScript KMeans 구현과 Python의 scikit-learn 구현은 초기화·동작이 달라 결과가 완전히 같다고 보장하지 않습니다.**
+양수·유효 평가계수를 로그 변환 및 표준화한 뒤 유사한 환경영향 특징을 묶어 탐색합니다. 군집 수별 실루엣 점수, 군집별 특성, 대표 항목을 확인할 수 있습니다.
+
+**보고용 군집 수는 3개입니다.** scikit-learn으로 k=2~6을 비교한 결과(`notebooks/kmeans_silhouette_sklearn.ipynb`):
+
+| k | 2 | 3 | 4 | 5 | 6 |
+|---|---|---|---|---|---|
+| 실루엣 점수 | 0.329 | 0.327 | 0.300 | 0.307 | 0.318 |
+| 시드 안정성(1.00=항상 같음) | 1.00 | 1.00 | 0.91 | 0.96 | 0.94 |
+
+점수는 모두 0.30~0.33으로 비슷했고, k=3은 시작 위치를 바꿔도 결과가 같으며 k=5·6은 2~5개짜리 아주 작은 군집이 생깁니다. 그래서 설명하기 쉬운 3개(낮음 / 보통 / 높음)를 보고용으로 정했습니다. 점수가 0.33 수준이라 **경계가 뚜렷한 군집은 아니며 탐색용**으로만 해석합니다.
+
+웹(JavaScript)과 scikit-learn의 k=3 결과는 분석 표본 142개 모두에서 같았습니다. 다른 k에서는 시작 위치에 따라 달라질 수 있습니다(예: k=5 실루엣 웹 0.286, Python 0.307).
 
 ## 3. 데이터와 해석 기준
 
@@ -62,15 +73,15 @@
 
 ## 4. 실행 방법
 
-### 정적 웹앱(GitHub Pages)
+### 배포: GitHub Pages만 사용
 
-`main` 브랜치 루트를 Pages에 연결하면 `index.html`이 실행됩니다. 정적 앱은 서버나 계정 없이 브라우저에서 동작합니다.
+`main` 브랜치 루트를 Pages에 연결하면 `index.html`이 실행됩니다. 서버나 계정 없이 브라우저에서만 동작합니다. PC 브라우저(화면 폭 1180px 이상)만 지원합니다.
 
 ```text
 https://goalbangg-prog.github.io/Looply-mini-LCA/
 ```
 
-로컬에서는 프로젝트 루트에서 아래 명령어로 정적 서버를 실행할 수 있습니다.
+로컬에서는 프로젝트 루트에서 아래 명령어로 정적 서버를 실행할 수 있습니다. (`index.html`을 파일로 직접 열면 브라우저 정책 때문에 일부 기능이 제한될 수 있습니다.)
 
 ```bash
 python -m http.server 8000
@@ -78,14 +89,12 @@ python -m http.server 8000
 
 브라우저에서 `http://localhost:8000` 접속. 차트는 외부 Plotly CDN 연결이 필요합니다.
 
-### Python Streamlit 프로토타입
+### 노트북 실행
 
 ```bash
-pip install -r python/requirements.txt
-streamlit run python/app.py
+pip install pandas numpy scikit-learn matplotlib jupyter
+jupyter notebook notebooks/kmeans_silhouette_sklearn.ipynb
 ```
-
-Python 프로토타입은 정적 웹앱과 별도로 보존했습니다. 분석 라이브러리와 알고리즘이 부분적으로 다르므로 결과 비교 시 주의가 필요합니다.
 
 ## 5. 저장소 구조
 
@@ -96,12 +105,12 @@ Looply-mini-LCA/
 ├── looply-lifecycle.jpg           # 보고서 일러스트(배포 필수)
 ├── README.md                      # 프로젝트 소개
 ├── data/
-│   └── lca_factors_clean.csv      # 분석 재현용 정제 데이터
+│   ├── lca_factors_clean.csv      # 분석 재현용 정제 데이터
+│   ├── sklearn_kmeans_k3.csv      # scikit-learn k=3 군집 결과
+│   └── web_kmeans_k3.csv          # 웹(JavaScript) k=3 군집 결과(비교용)
 ├── notebooks/
-│   └── data_preprocessing.ipynb   # 데이터 전처리 실습
-├── python/
-│   ├── app.py                     # Streamlit 초기 프로토타입
-│   └── requirements.txt
+│   ├── data_preprocessing.ipynb   # 데이터 전처리 실습
+│   └── kmeans_silhouette_sklearn.ipynb  # scikit-learn KMeans·실루엣 분석
 └── docs/
     ├── CHANGELOG.md              # 버전별 세부 작업 기록
     └── TEST_REPORT.md            # 수행된 검증과 미검증 항목
@@ -111,12 +120,12 @@ Looply-mini-LCA/
 
 ## 6. 개발 과정에서 개선한 내용
 
-1. Pandas/NumPy 전처리와 Python Streamlit 기반 시제품 구현
-2. GitHub Pages 배포 가능한 정적 HTML/JavaScript 앱 구현
-3. Plotly 차트, 상관관계 분석 및 브라우저 KMeans와 실루엣 추천 확장
+1. Pandas/NumPy 전처리와 scikit-learn KMeans 군집화 실험
+2. GitHub Pages로 배포 가능한 정적 HTML/JavaScript 앱 구현
+3. Plotly 차트, 상관관계 분석, 브라우저 KMeans와 실루엣 점수 확장
 4. 분석 설명을 실제 데이터 해석 중심으로 개편하고 용어·선택 항목 통일
-5. 리포트 탐색·스크롤 문제를 반복 개선한 뒤 브라우저 기본 스크롤로 복귀
-6. 이동 불편을 줄이기 위해 **데스크톱 좌측 고정 메뉴** 및 모바일 상단 메뉴 도입
+5. 계산기 선택을 대분류 → 구분 → 소분류 3단계와 이름 검색창으로 단순화, 항목 이름 표시 오류 수정
+6. scikit-learn으로 군집 수를 검증하고 웹 결과와 비교, 보고용 군집 수(k=3) 선정
 
 버전별 변경 내역과 검증 한계는 [CHANGELOG](docs/CHANGELOG.md) 및 [TEST_REPORT](docs/TEST_REPORT.md)를 참고해 주세요.
 
@@ -131,7 +140,7 @@ AI 도구를 개발 보조에 활용했습니다. 결과를 사용하거나 실�
 
 ## 8. 검증 상태
 
-기존에 남겨진 정적/브라우저 검증 기록은 [검증 기록](docs/TEST_REPORT.md)에 보존했습니다. **새 저장소 배포 URL에서의 전체 회귀 테스트, 모바일 실기기 테스트, 모든 단위 조합 수치 검증은 수행 완료로 표기하지 않습니다.**
+수행한 검증과 하지 않은 검증은 [검증 기록](docs/TEST_REPORT.md)에 구분해 적었습니다. **Plotly 차트의 실제 모양, GitHub Pages 배포 주소에서의 동작, 모든 단위 입력 조합은 확인하지 못했습니다.**
 
 ---
 
