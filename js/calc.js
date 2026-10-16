@@ -13,27 +13,24 @@
   basket = load(); badge();
 
   function build() {
-    $('calc').innerHTML = `<div class="calc-grid">
-    <aside class="panel sticky"><span class="eyebrow">01 / Selection</span><h3>평가계수 선택</h3>
-      <label for="search">이름 검색</label>
-      <input id="search" type="search" placeholder="예: 시멘트, 알루미늄, 경유, 매립" autocomplete="off">
-      <p class="hint" id="searchInfo" aria-live="polite"></p>
-      <div style="display:grid;gap:12px;margin-top:12px">
+    $('calc').innerHTML = `<div class="calc-stack">
+    <section class="panel"><span class="eyebrow">01 / Selection</span><h3>평가계수 선택</h3>
+      <div class="sel-row">
+        <div><label for="search">이름 검색</label><input id="search" type="search" placeholder="예: 시멘트, 알루미늄, 경유, 매립" autocomplete="off"></div>
         <div><label for="stage">① 대분류</label><select id="stage"></select></div>
         <div><label for="category">② 구분</label><select id="category"></select></div>
         <div><label for="material">③ 항목</label><select id="material"></select></div>
       </div>
+      <p class="hint" id="searchInfo" aria-live="polite" style="margin:6px 0 0"></p>
       <div class="preview" id="preview"></div>
-      <div class="row" style="margin-top:16px"><div style="width:150px"><label for="amount">사용량</label><input id="amount" type="number" min="0" step="any" value="1"></div>
-        <div style="width:100px"><label for="unit">단위</label><select id="unit"></select></div>
-        <button class="btn" id="add" style="flex:1">계산 목록에 추가</button></div>
-      <div id="toast" aria-live="polite"></div>
-    </aside>
-    <div>
+      <div class="add-row"><div style="width:150px"><label for="amount">사용량</label><input id="amount" type="number" min="0" step="any" value="1"></div>
+        <div style="width:110px"><label for="unit">단위</label><select id="unit"></select></div>
+        <button class="btn" id="add">계산 목록에 추가</button><div id="toast" aria-live="polite"></div></div>
+    </section>
       <section class="panel"><div class="row" style="justify-content:space-between;align-items:center;margin-bottom:6px"><div><span class="eyebrow">02 / Inventory</span><h3 style="margin:0">계산 목록</h3></div>
         <div class="row"><button class="btn sub sm" id="example">예시 구성 불러오기</button><button class="btn sub sm" id="clear">전체 삭제</button></div></div><div id="basket"></div></section>
       <section class="panel"><div class="row" style="justify-content:space-between;align-items:center;margin-bottom:12px"><div><span class="eyebrow">03 / Results</span><h3 style="margin:0">환경영향 산정 결과</h3></div><div class="row" id="baseBtns"></div></div><div id="results"></div></section>
-    </div></div>`;
+    </div>`;
     $('stage').onchange = refreshCategories; $('search').oninput = refreshCategories;
     $('category').onchange = refreshMaterials; $('material').onchange = refreshPreview;
     $('add').onclick = add; $('example').onclick = example; $('clear').onclick = () => { basket = []; save(); renderBasket(); };
@@ -62,14 +59,13 @@
     if (!cur) { box.innerHTML = '<span class="muted">조건에 맞는 항목이 없습니다. 검색어를 고치거나 지워 보세요.</span>'; L.opts($('unit'), [], x => x, x => x); return; }
     const keepUnit = $('unit').value; L.opts($('unit'), unitsOf(cur), x => x, x => x); $('unit').value = unitsOf(cur).includes(keepUnit) ? keepUnit : cur.unit;
     const same = D.filter(r => r.stage === cur.stage && r.unit === cur.unit && r.category !== '수자원');
-    box.innerHTML = `<b>${esc(lbl(cur))}</b><div class="hint" style="margin:2px 0 8px">계수는 1 ${esc(cur.unit)}당 값이며, 오른쪽은 같은 대분류·같은 단위 항목 중 위치(백분위)입니다</div>` + IMP.map((im, j) => {
-      const v = cur.v[j], refv = same.filter(r => r.v[j] != null).map(r => r.v[j]);
-      const head = `<span>${im.name}<small class="muted" style="display:block;font-size:11px">${im.sym}</small></span>`;
-      if (v == null) return `<div class="prev-row">${head}<span class="muted">결측</span><span></span><span></span></div>`;
-      if (refv.length < 10) return `<div class="prev-row">${head}<b>${fmt(v)}</b><span class="muted" style="grid-column:3/5;font-size:12px">비교 대상 ${refv.length}건뿐이라 위치 생략</span></div>`;
+    box.innerHTML = `<div class="pv-head"><b>${esc(lbl(cur))}</b><span class="hint">1 ${esc(cur.unit)}당 계수 · 아래 막대는 같은 대분류·같은 단위 항목 중 위치(백분위)</span></div><div class="pvs">` + IMP.map((im, j) => {
+      const v = cur.v[j], refv = same.filter(r => r.v[j] != null).map(r => r.v[j]), head = `<span class="pv-n">${im.name}</span>`;
+      if (v == null) return `<div class="pv na">${head}<b class="muted">결측</b><small>${im.sym}</small></div>`;
+      if (refv.length < 10) return `<div class="pv">${head}<b>${fmt(v)}</b><small>${im.sym}</small><small class="muted">비교 대상 ${refv.length}개뿐</small></div>`;
       const p = S.percentile(refv, v);
-      return `<div class="prev-row">${head}<b>${fmt(v)}</b><div class="bar" aria-hidden="true"><i style="width:${p.toFixed(0)}%"></i></div><span><b>${L.topLabel(p)}</b><small class="muted"> n=${refv.length}</small></span></div>`;
-    }).join('');
+      return `<div class="pv">${head}<b>${fmt(v)}</b><small>${im.sym}</small><div class="bar" aria-hidden="true"><i style="width:${p.toFixed(0)}%"></i></div><small><b>${L.topLabel(p)}</b> · ${refv.length}개 중</small></div>`;
+    }).join('') + '</div>';
   }
 
   function toast(msg) { const t = $('toast'); t.innerHTML = `<div class="toast">${msg}</div>`; clearTimeout(toast.t); toast.t = setTimeout(() => (t.innerHTML = ''), 3500); }
@@ -151,13 +147,13 @@
       if (!t.n) return `<div class="metric na"><span>${im.name}</span><strong>결측</strong><small>선택한 항목 모두 값이 비어 있음</small></div>`;
       return `<div class="metric"><span>${im.name}${t.n < t.all ? '<em class="part" title="결측 항목이 합계에서 제외됨">부분합계</em>' : ''}</span><strong>${fmt(t.sum)}<em class="u">${im.sym}</em></strong><small>${t.n < t.all ? `${t.all}건 중 ${t.n}건 반영` : `${t.all}건 모두 반영`}</small>${dlt(j)}</div>`;
     }).join('')}</div>
-    ${partial ? '<div class="caution">‘부분합계’ 범주는 값이 비어 있는(결측) 항목이 합계에서 빠져 있어 실제보다 작게 계산될 수 있습니다. 결측을 0으로 바꾸어 넣지는 않았습니다.</div>' : ''}
+    ${partial ? '<div class="caution">‘부분합계’는 값이 비어 있는 항목(결측치)을 빼고 더한 합계라, 실제보다 작을 수 있습니다. 결측치를 0으로 바꿔 더하지는 않았습니다.</div>' : ''}
     ${baseline ? `<p class="hint">기준안은 저장한 시점의 ${baseline.n}건 구성입니다. 수량이나 항목을 바꾸면 기준안 대비 변화율이 바로 갱신됩니다.</p>` : ''}
     <h4 style="margin:24px 0 8px">일상 속 규모로 환산하면</h4>${eq}<p class="hint">${esc(L.EQ_NOTE)} <a href="#notes" data-go="notes">방법·출처 보기</a></p>${lvl}
-    <div class="row" style="margin:24px 0 8px;align-items:center"><h4 style="margin:0">기여도 분석 <small class="muted" style="font-weight:500">(어느 항목이 결과를 좌우하는가, hotspot)</small></h4><div style="width:200px"><select id="impSel" aria-label="영향범주 선택">${IMP.map((im, j) => `<option value="${j}"${j === impactSel ? ' selected' : ''}>${im.name}</option>`).join('')}</select></div></div>
+    <div class="row" style="margin:24px 0 8px;align-items:center"><h4 style="margin:0">기여도 분석 <small class="muted" style="font-weight:500">(hotspot: 결과를 가장 크게 좌우하는 항목 찾기)</small></h4><div style="width:200px"><select id="impSel" aria-label="영향범주 선택">${IMP.map((im, j) => `<option value="${j}"${j === impactSel ? ' selected' : ''}>${im.name}</option>`).join('')}</select></div></div>
     <div id="bars"></div>
     <h4 style="margin:28px 0 4px">불확도 시나리오 <small class="muted" style="font-weight:500">(몬테카를로 시뮬레이션: 값을 무작위로 수천 번 흔들어 결과의 범위를 보는 방법)</small></h4>
-    <p class="hint" style="margin:0 0 10px">원자료에는 계수의 오차 범위가 없어서, 아래 불확도는 <b>가정값</b>입니다. 실제 오차가 아니라 “계수가 이 정도 흔들린다면 합계가 어느 범위에 놓이는가”를 보여 주는 시나리오입니다.</p>
+    <p class="hint" style="margin:0 0 10px">원자료에는 계수의 오차 범위가 없어서 아래 불확도는 <b>가정한 값</b>입니다. 실제 오차가 아니라 ‘계수가 이만큼 흔들린다면 합계가 어느 범위에 놓이는가’를 보여 주는 시나리오입니다.</p>
     <div class="row" style="margin-bottom:8px"><div style="width:190px"><label for="mcImp">영향범주</label><select id="mcImp">${IMP.map((im, j) => `<option value="${j}"${j === mcImp ? ' selected' : ''}>${im.name}</option>`).join('')}</select></div>
       <div style="width:250px"><label for="mcGsd">가정하는 계수의 불확도</label><select id="mcGsd">${[[1.1, '낮음 (약 ±10%)'], [1.3, '보통 (약 ±30%)'], [1.5, '높음 (약 ±50%)'], [2.0, '매우 높음 (약 2배 범위)']].map(([g, t]) => `<option value="${g}"${g === mcGsd ? ' selected' : ''}>${t}</option>`).join('')}</select></div>
       <button class="btn sub sm" id="mcRun">다시 뽑기</button></div>
@@ -180,10 +176,10 @@
     const r = S.montecarlo(have.map(x => x.v[j]), mcGsd, 5000, mcSeed), det = have.reduce((a, x) => a + x.v[j], 0), order = have.map((x, i) => ({ x, sh: r.share[i] })).sort((a, b) => b.sh - a.sh);
     box.innerHTML = `<div class="grid" style="grid-template-columns:1.2fr 1fr;gap:18px"><div><div id="mcChart" class="chart h300"></div></div><div>
       <div class="metrics" style="grid-template-columns:repeat(3,1fr)"><div class="metric"><span>하한 (P5)</span><strong>${fmt(r.p5)}</strong><small>${im.sym}</small></div><div class="metric"><span>중앙 (P50)</span><strong>${fmt(r.p50)}</strong><small>${im.sym}</small></div><div class="metric"><span>상한 (P95)</span><strong>${fmt(r.p95)}</strong><small>${im.sym}</small></div></div>
-      <div class="read">계수가 가정한 만큼 흔들리면 ${im.name} 합계의 <b>90%</b>가 ${fmt(r.p5)} ~ ${fmt(r.p95)} 사이에 놓입니다(P5·P95: 하위 5%, 상위 5% 경계). 기본 계산값 ${fmt(det)}의 <b>${(r.p5 / det).toFixed(2)}배 ~ ${(r.p95 / det).toFixed(2)}배</b>입니다.</div></div></div>
+      <div class="read">계수가 가정한 만큼 흔들린다면, 5,000번 시뮬레이션 중 90%에서 ${im.name} 합계가 <b>${fmt(r.p5)} ~ ${fmt(r.p95)}</b> 사이에 들어갑니다(하위 5%~상위 5%, 각각 P5·P95). 기본 계산값 ${fmt(det)}의 <b>${(r.p5 / det).toFixed(2)}배 ~ ${(r.p95 / det).toFixed(2)}배</b>입니다.</div></div></div>
       <p style="margin:14px 0 6px"><b>불확도에 가장 크게 기여하는 항목</b> <small class="muted">(각 항목의 흔들림이 합계의 흔들림을 얼마나 설명하는지)</small></p>
       ${order.map(o => `<div class="hbar"><span>${esc(lbl(o.x.row))}</span><div class="bar"><i style="width:${(o.sh * 100).toFixed(1)}%"></i></div><span class="num"><b>${o.sh < 0.001 ? '0.1% 미만' : (o.sh * 100).toFixed(o.sh < 0.1 ? 1 : 0) + '%'}</b></span></div>`).join('')}
-      <p class="hint">값이 있는 ${have.length}건 기준 · 5,000회 시행 · 항목끼리 독립이라고 가정 · 로그정규 분포(중앙값 유지)를 사용했습니다. 같은 가정에서 결과를 다시 뽑아도 값이 조금씩 달라집니다.</p>`;
+      <p class="hint">값이 있는 ${have.length}개 항목 기준입니다. 항목끼리 서로 독립이라고 가정했고, 로그정규 분포(항상 양수이고 오른쪽으로 길게 늘어진 분포)를 썼습니다. ‘다시 뽑기’를 누르면 값이 조금씩 달라집니다.</p>`;
     const bins = 40, lo = r.p5 * .6, hi = r.p95 * 1.5;
     L.plot('mcChart', [{ type: 'histogram', x: r.samples.filter(v => v <= hi), nbinsx: bins, marker: { color: '#2367d1', opacity: .75 }, hovertemplate: '%{x:.3g} 부근: %{y}회<extra></extra>' }],
       { xaxis: { title: `${im.name} 합계 (${im.sym})` }, yaxis: { title: '시행 횟수' }, bargap: 0.03, margin: { l: 60, b: 55, t: 20 }, showlegend: false,

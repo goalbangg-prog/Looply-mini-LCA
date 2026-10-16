@@ -168,3 +168,21 @@ input,select{transition:border-color .2s,box-shadow .2s}input:focus,select:focus
 .prev-row>span:last-child small{display:block}
 
 .dec td,.dec th{vertical-align:top;font-size:14px;line-height:1.65;padding:12px 12px}.dec td:first-child{white-space:normal}
+.find .fnote{display:block;margin-top:10px;font-size:12.5px;color:#9db4d6;line-height:1.55}
+
+/* 계산기: 위에서 선택, 아래에서 목록·결과 (세로로 길어지지 않도록 한 줄 배치) */
+.calc-stack>.panel+.panel{margin-top:22px}
+.sel-row{display:grid;grid-template-columns:1.1fr 1fr 1fr 1.5fr;gap:14px;margin-top:10px}
+.preview{margin-top:14px;padding:12px 14px}
+.pv-head{display:flex;gap:14px;align-items:baseline;flex-wrap:wrap;margin-bottom:8px}
+.pvs{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}
+.pv{border:1px solid var(--line);border-radius:10px;padding:9px 11px;background:#fff;display:flex;flex-direction:column;gap:3px;min-width:0}
+.pv .pv-n{font-size:12.5px;color:var(--muted);font-weight:700}
+.pv b{font-size:17px;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.pv small{font-size:11.5px;color:var(--muted);line-height:1.4;overflow-wrap:anywhere}
+.pv.na{background:#f6f8fb}
+.add-row{display:flex;gap:12px;align-items:flex-end;margin-top:14px;flex-wrap:wrap}
+.add-row .btn{padding:11px 26px}
+.add-row #toast{flex:1;min-width:220px}.add-row .toast{margin:0}
+.metrics{grid-template-columns:repeat(4,1fr)}
+.pv small b{font-size:inherit}

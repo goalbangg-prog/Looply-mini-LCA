@@ -36,7 +36,7 @@
   // 차트: Plotly 가 없으면(CDN 차단 등) 안내 문구를 보여 준다
   L.plot = (id, traces, layout, extra) => {
     const el = L.$(id); if (!el) return;
-    if (!window.Plotly) { el.innerHTML = '<p class="muted center pad">차트 라이브러리(Plotly) 로딩에 실패했습니다. 네트워크 연결을 확인한 뒤 새로고침하십시오.</p>'; return; }
+    if (!window.Plotly) { el.innerHTML = '<p class="muted center pad">차트 라이브러리(Plotly) 로딩에 실패했습니다. 네트워크 연결을 확인한 뒤 새로고침해 주세요.</p>'; return; }
     const base = {
       font: { family: 'Pretendard, "Noto Sans KR", Inter, sans-serif', size: 13, color: '#243247' },
       paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)', margin: { l: 70, r: 20, t: 20, b: 60 }, hoverlabel: { font: { size: 13 } }
@@ -56,14 +56,16 @@
   // 군집 이름: 숫자(전체 중앙값 대비 배수)에서 바로 만든다. ratios=[영향별 배수], names=[영향 이름]
   L.fx = v => (v >= 10 ? Math.round(v) : v.toFixed(v < 1 ? 2 : 1)) + '배';
   L.times = v => !isFinite(v) ? '-' : v >= 10000 ? `약 ${Math.round(v / 1000) / 10}만 배` : v >= 100 ? `약 ${Math.round(v).toLocaleString('ko-KR')}배` : v >= 10 ? `약 ${Math.round(v)}배` : `${v.toFixed(1)}배`;
+  // 조사 선택: 받침 여부에 따라 이/가, 은/는, 과/와
+  L.josa = (w, a, b) => { const h = String(w).replace(/[^가-힣]+$/, '').slice(-1); const c = h ? h.charCodeAt(0) : 0; return w + (c && (c - 0xAC00) % 28 !== 0 ? a : b); };
   L.clusterTitle = (ratios, names) => {
     const o = ratios.map((v, i) => ({ n: names[i], v })).sort((a, b) => b.v - a.v);
     const two = o.slice(0, 2).map(x => `${x.n} ${L.fx(x.v)}`).join(', ');
-    if (o[0].v < 1) return { title: '전 범주 낮음 군집', line: '모든 영향범주가 전체 중앙값보다 낮습니다.' };
-    const big = o.filter(x => x.v >= 5);
-    if (big.length) return { title: big.slice(0, 2).map(x => x.n).join('·') + ' 수치가 두드러진 군집', line: `전체 중앙값의 <b>${two}</b>로, 이 범주들이 유난히 큽니다.` };
-    if (o[0].v >= 2) return { title: '일부 범주가 높은 군집', line: `전체 중앙값의 <b>${two}</b> 수준입니다.` };
-    return { title: '중간 수준 군집', line: `전체 중앙값과 비슷합니다(가장 큰 차이: ${o[0].n} ${L.fx(o[0].v)}).` };
+    if (o[0].v < 1) return { title: '전반적으로 낮은 군집', line: '모든 영향이 전체 중앙값보다 낮습니다.' };
+    const big = o.filter(x => x.v >= 5).slice(0, 2);
+    if (big.length) return { title: `${L.josa(big.map(x => x.n).join('·'), '이', '가')} 유난히 큰 군집`, line: `전체 중앙값보다 <b>${two}</b> 높습니다.` };
+    if (o[0].v >= 2) return { title: `${L.josa(o[0].n, '이', '가')} 높은 군집`, line: `전체 중앙값보다 <b>${two}</b> 높습니다.` };
+    return { title: '중간 수준 군집', line: `대부분의 영향이 전체 중앙값과 비슷합니다(가장 큰 차이: ${o[0].n} ${L.fx(o[0].v)}).` };
   };
   L.coverageOK = s => L.IMP.filter((_, j) => L.coverage(s.rows, j) >= .5).length;
   L.topLabel = p => (p >= 50 ? `상위 ${Math.max(1, Math.round(100 - p))}%` : `하위 ${Math.max(1, Math.round(p))}%`);
