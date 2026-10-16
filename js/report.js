@@ -22,6 +22,20 @@
     const nStage = D.filter(r => r.stage === '원료 및 에너지 생산').length, nKg = RES.base_n;
     const funnel = [['전체 평가계수', D.length, ''], ['원료 및 에너지 생산 단계', nStage, `${D.length - nStage}건 제외 (다른 단계는 단위와 영향범주 구성이 달라 함께 비교할 수 없음)`], ['기준 단위가 kg인 항목', nKg, `${nStage - nKg}건 제외 (kg이 아닌 다른 단위)`], ['수자원(상수·공업용수) 제외', POOL.length, `${nKg - POOL.length}건 제외 (재료가 아닌 용수이고 계수가 1,000배 이상 작음)`], [`군집 분석 대상 (${RES.features.length}개 범주 모두 값이 있는 항목)`, RES.cluster_n, `${POOL.length - RES.cluster_n}건 제외 (5개 범주 중 값이 빈 것이 있음)`]];
 
+    const f = RES.cluster_n, ps = RES.sensitivity, ksc = RES.k_scores;
+    const decisions = [
+      ['오존층영향', '분석에서 제외', `원료 단계에서 값이 있는 항목이 ${ozPool}%뿐(${ozoneAll}/${D.length}건)이라 통계로 말할 수 있는 표본이 안 됩니다.`, `포함하면 군집 대상이 ${Math.round(L.coverage(POOL, 6) * POOL.length)}건 안팎으로 줄어 결과가 우연에 좌우됩니다.`],
+      ['결측치', '0으로 바꾸지 않고 비워 둠', '“측정되지 않음”과 “영향이 0”은 다른 뜻입니다. 0으로 넣으면 합계와 상관이 왜곡됩니다.', '0으로 채우면 값이 빈 범주가 실제보다 낮게 보입니다.'],
+      ['단위가 다른 항목', '섞지 않고 원료·kg 항목만 주 대상으로 삼음', `kg, MJ, ton·km 등은 의미가 달라 한 그래프에서 비교할 수 없습니다. 원료 단계 ${nStage}건 중 ${POOL.length}건이 대상입니다.`, '단위를 억지로 환산하면 근거 없는 비교가 생깁니다.'],
+      ['수자원(상수·공업용수)', '분석에서 제외', '재료가 아니라 용수이고 계수 크기가 1,000배 이상 작아 분포와 군집을 끌어당깁니다.', '포함하면 “낮은 값” 군집이 수자원 때문에 만들어질 수 있습니다.'],
+      ['로그 변환 + 표준화', '군집 분석 전에 적용', '계수가 수십만 배까지 차이 나서 변환 없이는 큰 값 몇 개가 결과를 정합니다.', '그대로 쓰면 사실상 한두 개 원료가 군집을 결정합니다.'],
+      ['군집 수(k)', `사전 기준으로 k=${K} 선택`, `결과를 보기 전에 “안정성 0.95 이상, 최소 군집 10% 이상, Davies–Bouldin 최소”로 정했습니다. 실루엣만 보면 k=2~6이 ${Math.min(...ksc.map(x => x.실루엣)).toFixed(2)}~${Math.max(...ksc.map(x => x.실루엣)).toFixed(2)}로 거의 같아 구분이 안 됩니다.`, 'k를 사후에 고르면 보기 좋은 결과만 선택하게 됩니다.'],
+      ['군집 결과의 위상', '“탐색용”으로 한정', `실루엣이 0.33이고, 쓰는 범주를 바꾸면 일치도(ARI)가 ${ps['3개(탄소·자원·산성)'].ARI.toFixed(2)}~${ps['6개(+스모그)'].ARI.toFixed(2)}로 떨어집니다.`, '등급처럼 제시하면 근거 이상의 확신을 주게 됩니다.'],
+      ['분석에서 빠진 항목의 편향', '결과와 함께 공개', `${f}/${POOL.length}건만 분석에 들어가며, 에너지(78%)·건축자재(57%)가 많이 빠졌습니다.`, '숨기면 “전체 원료를 대표한다”는 오해가 생깁니다.'],
+      ['재활용 계수 해석', '해석을 보류하고 확인 필요로 표시', '재활용으로 새 자원을 덜 쓰는 효과(회피 부하)가 계수에 반영됐는지 원자료에 나와 있지 않습니다.', '반영 여부를 모른 채 소각과 비교하면 결론이 뒤집힐 수 있습니다.'],
+      ['불확도(몬테카를로)', '가정값임을 표시하고 시나리오로만 제공', '원자료에 오차 범위가 없어 실제 불확도를 계산할 수 없습니다. 대신 “이만큼 흔들린다면”을 보여 줍니다.', '근거 없이 ±값을 단정하면 정밀해 보이는 가짜 결과가 됩니다.'],
+      ['생활 환산 기준', '출처를 밝히고 최신 공개값 사용', '승용차 계수는 확인 가능한 최신 공식 실적이 2020년 판매분이라 한계를 함께 표시했습니다.', '오래된 값을 최신인 것처럼 쓰면 신뢰가 떨어집니다.']
+    ];
     $('report').innerHTML = `
     <section class="hero">
       <span class="eyebrow">LOOPLY · LCA DATA ANALYSIS</span>
@@ -89,7 +103,12 @@
       </div>
     </section>
 
-    <section class="sec" data-pane="s6"><span class="eyebrow">06 / Methods & Sources</span><h2>분석 방법과 <span class="hl">출처</span>는 따로 모았습니다</h2>
+    <section class="sec" data-pane="s5b"><span class="eyebrow">06 / My Decisions</span><h2>분석 중 <span class="hl">내가 내린 판단</span>과 그 이유</h2>
+      <p class="lead">데이터를 다루는 과정에는 정답이 없는 선택이 많습니다. 어떤 선택을 했고, 왜 그렇게 했으며, 다른 선택을 했다면 무엇이 달라졌을지를 정리했습니다.</p>
+      <div class="card"><table class="tbl dec"><thead><tr><th style="width:17%">판단</th><th style="width:20%">선택</th><th>근거</th><th style="width:24%">다르게 했다면</th></tr></thead><tbody>${decisions.map(d => `<tr><td><b>${d[0]}</b></td><td>${d[1]}</td><td>${d[2]}</td><td class="muted">${d[3]}</td></tr>`).join('')}</tbody></table></div>
+    </section>
+
+    <section class="sec" data-pane="s6"><span class="eyebrow">07 / Methods & Sources</span><h2>분석 방법과 <span class="hl">출처</span>는 따로 모았습니다</h2>
       <p class="lead">사용한 통계 기법의 설명, 생활 환산 기준의 출처, 기술 스택과 코드 링크는 ‘방법·출처’ 탭에 정리했습니다.</p>
       <button class="btn" id="goNotes">방법·출처 보기 →</button>
     </section>`;

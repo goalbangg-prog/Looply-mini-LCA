@@ -26,6 +26,11 @@ async def main():
         res=await pg.inner_text("#results"); print("metric sample:",res[:200].replace("\n"," | "))
         print("출처 in results:", "출처" in res, "| kg Sb eq · in results:", "kg Sb eq ·" in res)
         print(res[res.index("일상 속"):res.index("일상 속")+700].replace("\n"," | "))
+        print("MC:",(await pg.inner_text("#mc"))[:330].replace("\n"," | "))
+        await pg.select_option("#mcGsd","2"); await pg.wait_for_timeout(200)
+        print("MC gsd2:",(await pg.inner_text("#mc"))[:120].replace("\n"," | "))
+        await pg.select_option("#mcImp","4"); await pg.wait_for_timeout(200)
+        print("MC water:",(await pg.inner_text("#mc"))[:120].replace("\n"," | "))
         # explore radar
         await pg.click('[data-tab="explore"]'); await pg.wait_for_timeout(300)
         await pg.select_option("#exMode","radar"); await pg.wait_for_timeout(200)

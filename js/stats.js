@@ -70,4 +70,16 @@
     return L.map(r => r.map((v, j) => (v - mu[j]) / sd[j]));
   };
   g.S = S;
+
+  S.rng = rng;
+  // 몬테카를로: 항목별 값 a_i에 로그정규 계수 exp(ln(GSD)·Z)를 곱해 합계의 분포를 만든다(중앙값 보존, 항목 독립)
+  S.montecarlo = (vals, gsd, n = 5000, seed = 7) => {
+    const r = rng(seed), sig = Math.log(gsd), m = vals.length;
+    const normal = () => { let u = 0, v = 0; while (u === 0) u = r(); v = r(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); };
+    const draws = vals.map(() => new Float64Array(n)), tot = new Float64Array(n);
+    for (let t = 0; t < n; t++) { let sum = 0; for (let k = 0; k < m; k++) { const x = vals[k] * Math.exp(sig * normal()); draws[k][t] = x; sum += x; } tot[t] = sum; }
+    const T = Array.from(tot), q = p => S.quantile(T, p);
+    const rk = S.rank(T), contrib = draws.map(d => { const c = S.pearson(S.rank(Array.from(d)), rk); return c * c; }), cs = contrib.reduce((a, b) => a + b, 0) || 1;
+    return { samples: T, p5: q(.05), p50: q(.5), p95: q(.95), mean: S.mean(T), share: contrib.map(c => c / cs) };
+  };
 })(window);

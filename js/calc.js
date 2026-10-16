@@ -5,7 +5,7 @@
   const unitsOf = row => Object.keys(UNIT_OPTS[row.unit] || { [row.unit]: 1 });
   const toBase = (row, u, amt) => amt * ((UNIT_OPTS[row.unit] || { [row.unit]: 1 })[u] ?? 1);
   const KEY = 'looply.basket.v2';
-  let basket = [], uid = 1, cur = null, baseline = null, impactSel = 0; const altSel = {}, altOpen = new Set();
+  let basket = [], uid = 1, cur = null, baseline = null, impactSel = 0, mcImp = 0, mcGsd = 1.3, mcSeed = 7; const altSel = {}, altOpen = new Set();
 
   const load = () => { try { const a = JSON.parse(localStorage.getItem(KEY) || '[]'); return a.filter(x => D[x.id] && x.amount > 0).map(x => ({ uid: uid++, id: x.id, amount: x.amount, unit: x.unit })); } catch (e) { return []; } };
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(basket.map(b => ({ id: b.id, amount: b.amount, unit: b.unit })))); } catch (e) { } };
@@ -156,16 +156,39 @@
     <h4 style="margin:24px 0 8px">일상 속 규모로 환산하면</h4>${eq}<p class="hint">${esc(L.EQ_NOTE)} <a href="#notes" data-go="notes">방법·출처 보기</a></p>${lvl}
     <div class="row" style="margin:24px 0 8px;align-items:center"><h4 style="margin:0">기여도 분석 <small class="muted" style="font-weight:500">(어느 항목이 결과를 좌우하는가, hotspot)</small></h4><div style="width:200px"><select id="impSel" aria-label="영향범주 선택">${IMP.map((im, j) => `<option value="${j}"${j === impactSel ? ' selected' : ''}>${im.name}</option>`).join('')}</select></div></div>
     <div id="bars"></div>
+    <h4 style="margin:28px 0 4px">불확도 시나리오 <small class="muted" style="font-weight:500">(몬테카를로 시뮬레이션: 값을 무작위로 수천 번 흔들어 결과의 범위를 보는 방법)</small></h4>
+    <p class="hint" style="margin:0 0 10px">원자료에는 계수의 오차 범위가 없어서, 아래 불확도는 <b>가정값</b>입니다. 실제 오차가 아니라 “계수가 이 정도 흔들린다면 합계가 어느 범위에 놓이는가”를 보여 주는 시나리오입니다.</p>
+    <div class="row" style="margin-bottom:8px"><div style="width:190px"><label for="mcImp">영향범주</label><select id="mcImp">${IMP.map((im, j) => `<option value="${j}"${j === mcImp ? ' selected' : ''}>${im.name}</option>`).join('')}</select></div>
+      <div style="width:250px"><label for="mcGsd">가정하는 계수의 불확도</label><select id="mcGsd">${[[1.1, '낮음 (약 ±10%)'], [1.3, '보통 (약 ±30%)'], [1.5, '높음 (약 ±50%)'], [2.0, '매우 높음 (약 2배 범위)']].map(([g, t]) => `<option value="${g}"${g === mcGsd ? ' selected' : ''}>${t}</option>`).join('')}</select></div>
+      <button class="btn sub sm" id="mcRun">다시 뽑기</button></div>
+    <div id="mc"></div>
     <div class="row" style="margin:24px 0 8px;justify-content:space-between;align-items:center"><h4 style="margin:0">항목별 산정 상세</h4><button class="btn sm" id="export">CSV 저장</button></div>
     <div class="scroll"><table class="tbl"><thead><tr><th>항목</th><th class="num">환산량</th>${IMP.map(im => `<th class="num">${im.name}<br><small>${im.sym}</small></th>`).join('')}</tr></thead><tbody>${res.map(x => `<tr><td>${esc(lbl(x.row))}</td><td class="num">${fmt(x.qty)} ${esc(x.row.unit)}</td>${x.v.map(v => `<td class="num${v == null ? ' muted' : ''}">${fmt(v)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
     $('impSel').onchange = () => { impactSel = +$('impSel').value; drawBars(res); };
-    $('export').onclick = () => exportCsv(res, tot); drawBars(res);
+    $('mcImp').onchange = () => { mcImp = +$('mcImp').value; drawMC(res); }; $('mcGsd').onchange = () => { mcGsd = +$('mcGsd').value; drawMC(res); }; $('mcRun').onclick = () => { mcSeed = (mcSeed * 7919 + 13) % 100000; drawMC(res); };
+    $('export').onclick = () => exportCsv(res, tot); drawBars(res); drawMC(res);
   }
   function drawBars(res) {
     const j = impactSel, have = res.filter(x => x.v[j] != null && x.v[j] > 0), sum = have.reduce((s, x) => s + x.v[j], 0);
     if (!have.length) { $('bars').innerHTML = '<p class="muted">선택한 영향범주는 계산 목록 전체가 결측이라 기여도를 계산할 수 없습니다.</p>'; return; }
     const sorted = [...have].sort((a, b) => b.v[j] - a.v[j]), top = sorted[0], tp = top.v[j] / sum * 100;
     $('bars').innerHTML = (have.length > 1 ? `<p style="margin:0 0 8px"><b>${IMP[j].name}</b>의 <b>${tp.toFixed(0)}%</b>가 <b>${esc(lbl(top.row))}</b>에서 발생합니다(기여도 1위).</p>` : '') + sorted.map(x => { const p = x.v[j] / sum * 100; return `<div class="hbar"><span>${esc(lbl(x.row))}</span><div class="bar"><i style="width:${p.toFixed(1)}%"></i></div><span class="num"><b>${p < 0.05 ? '0.1% 미만' : p.toFixed(p < 10 ? 1 : 0) + '%'}</b></span></div>`; }).join('') + `<p class="hint">값이 있는 ${have.length}건 기준${have.length < res.length ? ` · ${res.length - have.length}건은 결측이라 제외` : ''}</p>`;
+  }
+  function drawMC(res) {
+    const j = mcImp, im = IMP[j], have = res.filter(x => x.v[j] != null && x.v[j] > 0), box = $('mc');
+    if (!have.length) { L.purge('mc'); box.innerHTML = '<p class="muted">선택한 영향범주는 계산 목록 전체가 결측이라 시뮬레이션을 할 수 없습니다.</p>'; return; }
+    const r = S.montecarlo(have.map(x => x.v[j]), mcGsd, 5000, mcSeed), det = have.reduce((a, x) => a + x.v[j], 0), order = have.map((x, i) => ({ x, sh: r.share[i] })).sort((a, b) => b.sh - a.sh);
+    box.innerHTML = `<div class="grid" style="grid-template-columns:1.2fr 1fr;gap:18px"><div><div id="mcChart" class="chart h300"></div></div><div>
+      <div class="metrics" style="grid-template-columns:repeat(3,1fr)"><div class="metric"><span>하한 (P5)</span><strong>${fmt(r.p5)}</strong><small>${im.sym}</small></div><div class="metric"><span>중앙 (P50)</span><strong>${fmt(r.p50)}</strong><small>${im.sym}</small></div><div class="metric"><span>상한 (P95)</span><strong>${fmt(r.p95)}</strong><small>${im.sym}</small></div></div>
+      <div class="read">계수가 가정한 만큼 흔들리면 ${im.name} 합계의 <b>90%</b>가 ${fmt(r.p5)} ~ ${fmt(r.p95)} 사이에 놓입니다(P5·P95: 하위 5%, 상위 5% 경계). 기본 계산값 ${fmt(det)}의 <b>${(r.p5 / det).toFixed(2)}배 ~ ${(r.p95 / det).toFixed(2)}배</b>입니다.</div></div></div>
+      <p style="margin:14px 0 6px"><b>불확도에 가장 크게 기여하는 항목</b> <small class="muted">(각 항목의 흔들림이 합계의 흔들림을 얼마나 설명하는지)</small></p>
+      ${order.map(o => `<div class="hbar"><span>${esc(lbl(o.x.row))}</span><div class="bar"><i style="width:${(o.sh * 100).toFixed(1)}%"></i></div><span class="num"><b>${o.sh < 0.001 ? '0.1% 미만' : (o.sh * 100).toFixed(o.sh < 0.1 ? 1 : 0) + '%'}</b></span></div>`).join('')}
+      <p class="hint">값이 있는 ${have.length}건 기준 · 5,000회 시행 · 항목끼리 독립이라고 가정 · 로그정규 분포(중앙값 유지)를 사용했습니다. 같은 가정에서 결과를 다시 뽑아도 값이 조금씩 달라집니다.</p>`;
+    const bins = 40, lo = r.p5 * .6, hi = r.p95 * 1.5;
+    L.plot('mcChart', [{ type: 'histogram', x: r.samples.filter(v => v <= hi), nbinsx: bins, marker: { color: '#2367d1', opacity: .75 }, hovertemplate: '%{x:.3g} 부근: %{y}회<extra></extra>' }],
+      { xaxis: { title: `${im.name} 합계 (${im.sym})` }, yaxis: { title: '시행 횟수' }, bargap: 0.03, margin: { l: 60, b: 55, t: 20 }, showlegend: false,
+        shapes: [[r.p5, '#8a97ab'], [r.p50, '#101d32'], [r.p95, '#8a97ab'], [det, '#c4504a']].map(([x, c], i) => ({ type: 'line', x0: x, x1: x, yref: 'paper', y0: 0, y1: 1, line: { color: c, width: i === 3 ? 2 : 1.5, dash: i === 3 ? 'solid' : 'dot' } })),
+        annotations: [{ x: det, yref: 'paper', y: 1.04, text: '기본 계산값', showarrow: false, font: { size: 11, color: '#c4504a' } }] });
   }
   function exportCsv(res, tot) {
     const cell = v => { let s = v == null ? '' : String(v); if (typeof v === 'string' && /^[=+\-@\t\r]/.test(s)) s = "'" + s; return '"' + s.replace(/"/g, '""') + '"'; };

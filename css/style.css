@@ -166,3 +166,5 @@ input,select{transition:border-color .2s,box-shadow .2s}input:focus,select:focus
 
 .calc-grid>*{min-width:0}
 .prev-row>span:last-child small{display:block}
+
+.dec td,.dec th{vertical-align:top;font-size:14px;line-height:1.65;padding:12px 12px}.dec td:first-child{white-space:normal}
