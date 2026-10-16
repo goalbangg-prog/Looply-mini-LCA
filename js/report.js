@@ -40,12 +40,12 @@
     $('report').innerHTML = `
     <section class="hero">
       <span class="eyebrow">LOOPLY · LCA DATA ANALYSIS</span>
-      <h1>평가계수 ${D.length}개를 뜯어보니,<br><span class="hl">탄소만 봐서는 놓치는 게 많았습니다</span></h1>
+      <h1>평가계수 ${D.length}개를 뜯어보니,<br><span class="hl">탄소발자국만 봐서는 놓치는 게 많았습니다</span></h1>
       <p class="lead">한국환경산업기술원이 공개한 환경성적표지 평가계수(원료·에너지·수송·폐기물의 환경영향 값)를 분석했습니다. 비어 있는 값은 어디에 몰려 있는지, 탄소발자국으로 다른 환경영향을 짐작할 수 있는지, 비슷한 원료끼리 묶으면 무엇이 보이는지 차례로 살펴봅니다.</p>
       <div class="finds">
-        <div class="find"><b>${cw.rho.toFixed(2)}<small>ρ</small></b><h3>탄소가 낮아도 물 부담은 따로 봐야 합니다</h3><p>탄소발자국이 큰 원료는 자원 사용(ρ ${ca.rho.toFixed(2)})과 산성비(ρ ${cs.rho.toFixed(2)})도 큰 편이지만, 물 사용과는 거의 따로 움직입니다(ρ ${cw.rho.toFixed(2)}).</p><small class="fnote">ρ(상관계수): 두 값의 순위가 얼마나 같이 움직이는지. 1에 가까울수록 같이 움직입니다.</small></div>
-        <div class="find"><b>${hid.length}<small>/ ${POOL.length}종</small></b><h3>탄소 순위보다 다른 영향 순위가 훨씬 높은 원료</h3><p>탄소발자국 순위는 낮은데 물 사용이나 산성비 순위는 40%p 이상 더 높은 원료가 ${hid.length}종입니다. ${hid.slice(0, 3).map(h => esc(h.r.name)).join(', ')} 등이 대표적입니다.</p></div>
-        <div class="find"><b>${onlyCarbon}<small>/ ${D.length}개</small></b><h3>탄소 외에는 값이 없는 항목</h3><p>연료 사용과 화학반응 단계는 탄소 값만 있습니다. 오존층영향은 ${D.length}개 중 ${ozoneAll}개만 값이 있어 분석에서 뺐습니다.</p></div>
+        <div class="find"><b>${cw.rho.toFixed(2)}<small>ρ</small></b><h3>탄소발자국이 낮아도 물 부담은 따로 봐야 합니다</h3><p>탄소발자국이 큰 원료는 자원 사용(ρ ${ca.rho.toFixed(2)})과 산성비(ρ ${cs.rho.toFixed(2)})도 큰 편이지만, 물 사용과는 거의 따로 움직입니다(ρ ${cw.rho.toFixed(2)}).</p><small class="fnote">ρ(상관계수): 두 값의 순위가 얼마나 같이 움직이는지. 1에 가까울수록 같이 움직입니다.</small></div>
+        <div class="find"><b>${hid.length}<small>/ ${POOL.length}종</small></b><h3>탄소발자국 순위보다 다른 영향 순위가 훨씬 높은 원료</h3><p>탄소발자국 순위는 낮은데 물 사용이나 산성비 순위는 40%p 이상 더 높은 원료가 ${hid.length}종입니다. ${hid.slice(0, 3).map(h => esc(h.r.name)).join(', ')} 등이 대표적입니다.</p></div>
+        <div class="find"><b>${onlyCarbon}<small>/ ${D.length}개</small></b><h3>탄소발자국 외에는 값이 없는 항목</h3><p>연료 사용과 화학반응 단계는 탄소발자국 값만 있습니다. 오존층영향은 ${D.length}개 중 ${ozoneAll}개만 값이 있어 분석에서 뺐습니다.</p></div>
       </div>
     </section>
 
@@ -54,7 +54,7 @@
       <div class="grid g-wide"><div class="card"><h3>단계별·영향별 결측치 비율 (%)</h3><div id="chCover" class="chart h340"></div><p class="hint">숫자가 클수록(주황) 비어 있는 값이 많습니다.</p></div>
         <div class="card"><h3>분석 대상을 이렇게 걸렀습니다</h3><div class="funnel">${funnel.map(([n, v, note]) => `<div class="fun"><span>${n}</span><div class="bar"><i style="width:${(v / D.length * 100).toFixed(1)}%"></i></div><b class="num">${v}</b></div>${note ? `<div class="hint" style="margin:-4px 0 4px 0">└ ${note}</div>` : ''}`).join('')}</div></div></div>
       <div class="grid g3" style="margin-top:22px">
-        <div class="card"><h3>연료 사용·화학반응 단계는 탄소만 있습니다</h3><p class="muted" style="margin:0">연료원별 사용(${RES.coverage_by_stage['연료원별 사용']['항목수']}개)과 화학반응공정(${RES.coverage_by_stage['화학반응공정']['항목수']}개)은 탄소발자국 외 값이 모두 비어 있습니다. 이 단계는 탄소만 계산할 수 있습니다.</p></div>
+        <div class="card"><h3>연료 사용·화학반응 단계는 탄소발자국만 있습니다</h3><p class="muted" style="margin:0">연료원별 사용(${RES.coverage_by_stage['연료원별 사용']['항목수']}개)과 화학반응공정(${RES.coverage_by_stage['화학반응공정']['항목수']}개)은 탄소발자국 외 값이 모두 비어 있습니다. 이 단계는 탄소발자국만 계산할 수 있습니다.</p></div>
         <div class="card"><h3>오존층영향은 뺐습니다</h3><p class="muted" style="margin:0">원료 단계 결측치가 ${ozMiss}%입니다(20개만 값이 있음). 통계 분석을 하기엔 너무 적어서 뺐고, 계산기에서는 값이 있는 항목에 한해 보여 줍니다.</p></div>
         <div class="card"><h3>광화학스모그는 선택 사항입니다</h3><p class="muted" style="margin:0">결측치가 ${miss('스모그')}%라 기본 분석(기준: 15% 이하)에는 넣지 않았습니다. 군집 분석 탭에서 직접 추가해 볼 수 있지만, 추가하면 분석 대상이 줄어듭니다.</p></div>
       </div>
@@ -66,9 +66,9 @@
         <div class="card"><div class="row" style="align-items:flex-end;margin-bottom:8px"><div style="width:180px"><label for="rsX">가로축</label><select id="rsX"></select></div><div style="width:180px"><label for="rsY">세로축</label><select id="rsY"></select></div></div><div id="chScatter" class="chart h400"></div><div id="scRead"></div></div>
         <div class="card"><h3>영향끼리의 상관계수 (색이 진할수록 비슷하게 움직임)</h3><div id="chCorr" class="chart h400"></div><div class="read">탄소발자국은 자원(${ca.rho.toFixed(2)})·산성비(${cs.rho.toFixed(2)})·부영양화(${cb.rho.toFixed(2)})와 비슷하게 움직이지만, 물소모와는 ${cw.rho.toFixed(2)}로 약합니다. 칸에 마우스를 올리면 비교에 쓴 원료 수가 나옵니다.</div></div>
       </div>
-      <div class="card" style="margin-top:22px"><h3>탄소 순위보다 다른 영향 순위가 훨씬 높은 원료 TOP 10</h3>
+      <div class="card" style="margin-top:22px"><h3>탄소발자국 순위보다 다른 영향 순위가 훨씬 높은 원료 TOP 10</h3>
         <table class="tbl"><thead><tr><th>원료</th><th>구분</th><th>탄소발자국 순위</th><th>가장 크게 차이 나는 영향</th><th>그 영향의 순위</th><th class="num">순위 차이</th></tr></thead><tbody>${hid.slice(0, 10).map(h => `<tr><td>${esc(h.r.name)}</td><td>${esc(h.r.category)}</td><td>${L.topLabel(h.c)}</td><td>${NAME[h.k]}</td><td><b>${L.topLabel(h.o)}</b></td><td class="num">${h.diff.toFixed(0)}%p</td></tr>`).join('')}</tbody></table>
-        <div class="caution">순위는 원료 ${POOL.length}종 안에서의 상대 위치입니다. 용도가 다른 소재의 좋고 나쁨을 가르는 값은 아닙니다. 다만 대체 소재를 고를 때 ‘탄소는 줄었는데 다른 영향이 늘지는 않았는가’(trade-off: 한쪽이 좋아지면 다른 쪽이 나빠지는 관계)를 점검하는 데 쓸 수 있습니다.</div></div>
+        <div class="caution">순위는 원료 ${POOL.length}종 안에서의 상대 위치입니다. 용도가 다른 소재의 좋고 나쁨을 가르는 값은 아닙니다. 다만 대체 소재를 고를 때 ‘탄소발자국은 줄었는데 다른 영향이 늘지는 않았는가’(trade-off: 한쪽이 좋아지면 다른 쪽이 나빠지는 관계)를 점검하는 데 쓸 수 있습니다.</div></div>
     </section>
 
     <section class="sec" data-pane="s3"><span class="eyebrow">03 / Transport & Waste</span><h2>수송과 폐기는 <span class="hl">무엇을 고르느냐</span>에 따라 차이가 큽니다</h2>
@@ -86,7 +86,7 @@
       <div class="card" style="margin-top:22px"><h3>군집 수를 ${K}개로 정한 이유</h3>
         <table class="tbl"><thead><tr><th>군집 수</th><th class="num">실루엣 계수<br><small class="muted">클수록 뚜렷</small></th><th class="num">Davies–Bouldin<br><small class="muted">작을수록 덜 겹침</small></th><th class="num">안정성(ARI)<br><small class="muted">1이면 매번 같음</small></th><th>군집 크기</th></tr></thead><tbody>${kScores.map(s => `<tr${s.k === K ? ' style="background:#e8f0fc;font-weight:700"' : ''}><td>${s.k}개${s.k === K ? ' ◀ 선택' : ''}</td><td class="num">${s.실루엣.toFixed(3)}</td><td class="num">${s.DB.toFixed(2)}</td><td class="num">${s.안정성.toFixed(2)}</td><td>${s.크기.join(' / ')}</td></tr>`).join('')}</tbody></table>
         <div class="read"><b>결과를 보기 전에 기준부터 정했습니다.</b> ① 다시 돌려도 같은 결과일 것(안정성 0.95 이상) ② 가장 작은 군집이 전체의 10% 이상일 것 ③ 둘 다 만족하는 후보(${RES.k_candidates.join('개, ')}개) 중 군집끼리 가장 덜 겹치는 것 → ${K}개. 2개와 3개의 실루엣 점수는 거의 같아서(${kScores[0].실루엣.toFixed(3)} 대 ${kScores[1].실루엣.toFixed(3)}), 해석하기 더 좋은 3개를 골랐습니다.</div>
-        <div class="caution"><b>한계:</b> 실루엣 점수가 0.33으로 낮아 군집 경계가 뚜렷하지 않습니다(0.5 이상이어야 뚜렷한 편). 묶는 기준이 되는 영향 종류를 바꾸면 결과도 달라집니다. 탄소·자원·산성화 3가지만 쓰면 원래 결과와의 일치도(ARI)가 ${sens['3개(탄소·자원·산성)'].ARI.toFixed(2)}, 광화학스모그를 더하면 ${sens['6개(+스모그)'].ARI.toFixed(2)}입니다. 그래서 이 군집은 탐색용이며, 공식 분류나 환경 등급으로 쓰면 안 됩니다.</div>
+        <div class="caution"><b>한계:</b> 실루엣 점수가 0.33으로 낮아 군집 경계가 뚜렷하지 않습니다(0.5 이상이어야 뚜렷한 편). 묶는 기준이 되는 영향 종류를 바꾸면 결과도 달라집니다. 탄소발자국·자원발자국·산성화 3가지만 쓰면 원래 결과와의 일치도(ARI)가 ${sens['3개(탄소·자원·산성)'].ARI.toFixed(2)}, 광화학스모그를 더하면 ${sens['6개(+스모그)'].ARI.toFixed(2)}입니다. 그래서 이 군집은 탐색용이며, 공식 분류나 환경 등급으로 쓰면 안 됩니다.</div>
         <div style="margin-top:14px"><button class="btn" id="goCluster">군집 분석 탭에서 직접 조건을 바꿔 보기 →</button></div></div>
     </section>
 
