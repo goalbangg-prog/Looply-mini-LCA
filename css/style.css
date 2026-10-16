@@ -77,7 +77,7 @@ input:focus,select:focus,button:focus-visible{outline:2px solid #7fa7df;outline-
 .row{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap}
 .hint{font-size:13.5px;color:var(--muted);margin:8px 0 0;line-height:1.65}
 /* 계산기 2단 */
-.calc-grid{display:grid;grid-template-columns:470px 1fr;gap:22px;align-items:start}
+.calc-grid{display:grid;grid-template-columns:470px minmax(0,1fr);gap:22px;align-items:start}
 .calc-grid .panel+.panel{margin-top:22px}
 .sticky{position:sticky;top:84px}
 .preview{margin-top:16px;border:1px dashed #b9c7da;border-radius:12px;padding:14px 16px;background:#fbfcfe}
@@ -112,3 +112,57 @@ input:focus,select:focus,button:focus-visible{outline:2px solid #7fa7df;outline-
 .foot{margin-top:60px;font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:18px;line-height:1.7}
 a{color:var(--accent)}
 [data-pane]{scroll-margin-top:100px}
+
+/* ===== 가독성: 줄바꿈·정렬 ===== */
+p,li,dd,.hint,.read,.caution,.lead,.status,.empty{text-wrap:pretty;word-break:keep-all;overflow-wrap:break-word}
+h1,h2,h3,h4,.find h3,.clu h4{text-wrap:balance;word-break:keep-all}
+.lead{max-width:780px}
+.tbl th,.tbl td{vertical-align:middle;line-height:1.55}
+.tbl td{word-break:keep-all}
+.tbl th small,.tbl td small{font-weight:500}
+.card p,.panel p{line-height:1.75}
+.card ul,.card ol{padding-left:20px;margin:6px 0 0}.card li{margin:7px 0;line-height:1.7}
+.sec>h2 .hl{white-space:normal}
+.read b,.caution b{white-space:normal}
+.metric small,.eqc small{overflow-wrap:anywhere}
+.eqc span{display:block;line-height:1.5}
+.fun{grid-template-columns:240px 1fr 56px}
+.fun span{line-height:1.45}
+.note-box{border:1px solid var(--line);border-radius:12px;background:#f8fafd;padding:14px 18px;font-size:14.5px;line-height:1.75;margin-top:14px}
+.term{border-bottom:1px dotted var(--accent);cursor:help}
+.fn{font-size:13.5px;color:var(--muted)}.fn a{white-space:nowrap}
+.toc{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 26px}.toc a{padding:6px 14px;border:1px solid var(--line);border-radius:999px;background:#fff;text-decoration:none;font-size:14px;font-weight:600;color:#25477d;transition:background .2s,transform .2s}.toc a:hover{background:var(--accent-soft);transform:translateY(-1px)}
+.mdl{width:100%;border-collapse:collapse;font-size:14.5px}.mdl th,.mdl td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;line-height:1.65}.mdl th{width:190px;color:#25477d;font-weight:700;background:#f8fafc}
+
+/* ===== 애니메이션 (움직임 줄이기 설정 시 해제) ===== */
+@keyframes paneIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes popIn{from{opacity:0;transform:translateY(8px) scale(.985)}to{opacity:1;transform:none}}
+@keyframes grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes slideDown{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+@keyframes glow{0%,100%{transform:translate(0,0)}50%{transform:translate(-26px,18px)}}
+main>[data-pane]:not(.hidden){animation:paneIn .5s cubic-bezier(.2,.7,.2,1) both}
+.rv{opacity:0;transform:translateY(18px);transition:opacity .6s cubic-bezier(.2,.7,.2,1),transform .6s cubic-bezier(.2,.7,.2,1);transition-delay:var(--d,0s)}
+.rv.in{opacity:1;transform:none}
+.bar i{transform-origin:left center;animation:grow .9s cubic-bezier(.2,.7,.2,1) both}
+.toast,.alt,.read,.caution,.status{animation:slideDown .35s ease both}
+.metric,.eqc,.item,.clu{animation:popIn .45s cubic-bezier(.2,.7,.2,1) both}
+.hero:after{animation:glow 14s ease-in-out infinite}
+.card,.panel,.metric,.eqc,.clu,.find,.item{transition:box-shadow .25s ease,transform .25s ease,border-color .25s ease,background .25s ease}
+.card:hover,.clu:hover,.eqc:hover,.metric:hover{box-shadow:0 10px 26px -14px #1d3a6b66;transform:translateY(-2px);border-color:#c9d7ec}
+.find:hover{background:rgba(255,255,255,.11);transform:translateY(-3px)}
+.btn{transition:background .2s,transform .15s,box-shadow .2s}.btn:hover{box-shadow:0 6px 16px -8px #2367d199}.btn:active{transform:scale(.97)}
+nav button{transition:background .2s,color .2s}
+input,select{transition:border-color .2s,box-shadow .2s}input:focus,select:focus{border-color:#7fa7df;box-shadow:0 0 0 3px #7fa7df33}
+.chk label{transition:background .2s,border-color .2s}.chk label:hover{background:var(--accent-soft)}
+.tbl tbody tr{transition:background .15s}.tbl tbody tr:hover{background:#f4f8fe}
+@media (prefers-reduced-motion:reduce){
+  *,*:before,*:after{animation:none!important;transition:none!important}
+  .rv{opacity:1;transform:none}html{scroll-behavior:auto}
+}
+.card.rv,.clu.rv,.find.rv{transition:opacity .6s cubic-bezier(.2,.7,.2,1) var(--d,0s),transform .6s cubic-bezier(.2,.7,.2,1) var(--d,0s),box-shadow .25s ease,border-color .25s ease,background .25s ease}
+.card.rv.in:hover,.clu.rv.in:hover{transform:translateY(-2px);transition-delay:0s}
+.metric strong .u{display:block;font-style:normal;font-size:12.5px;font-weight:500;color:var(--muted);letter-spacing:0;margin-top:1px}
+#n1,#n2,#n3,#n4,#n5,#n6{scroll-margin-top:90px}
+
+.calc-grid>*{min-width:0}
+.prev-row>span:last-child small{display:block}

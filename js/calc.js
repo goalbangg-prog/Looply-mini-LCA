@@ -48,7 +48,7 @@
     L.opts($('category'), cats, x => x, x => `${x} (${rows.filter(r => r.category === x).length})`, true);
     if (q) {
       const other = D.filter(r => r.stage !== $('stage').value && (r.name + ' ' + r.category).toLowerCase().includes(q.toLowerCase())).length;
-      $('searchInfo').innerHTML = rows.length ? `현재 대분류에서 <b>${rows.length}건</b> 검색${other ? ` · 다른 대분류 ${other}건` : ''}` : `현재 대분류에 해당 항목이 없습니다.${other ? ` 다른 대분류에 ${other}건이 있으므로 ① 대분류를 변경하십시오.` : ''}`;
+      $('searchInfo').innerHTML = rows.length ? `현재 대분류에서 <b>${rows.length}건</b> 검색${other ? ` · 다른 대분류 ${other}건` : ''}` : `현재 대분류에는 해당 항목이 없습니다.${other ? ` 다른 대분류에 ${other}건이 있으니 ① 대분류를 바꿔 보세요.` : ''}`;
     } else $('searchInfo').textContent = '';
     refreshMaterials();
   }
@@ -59,14 +59,14 @@
   }
   function refreshPreview() {
     cur = $('material').value === '' ? null : (D[+$('material').value] || null); const box = $('preview'); $('add').disabled = !cur;
-    if (!cur) { box.innerHTML = '<span class="muted">조건에 맞는 항목이 없습니다. 검색어를 수정하거나 삭제하십시오.</span>'; L.opts($('unit'), [], x => x, x => x); return; }
+    if (!cur) { box.innerHTML = '<span class="muted">조건에 맞는 항목이 없습니다. 검색어를 고치거나 지워 보세요.</span>'; L.opts($('unit'), [], x => x, x => x); return; }
     const keepUnit = $('unit').value; L.opts($('unit'), unitsOf(cur), x => x, x => x); $('unit').value = unitsOf(cur).includes(keepUnit) ? keepUnit : cur.unit;
     const same = D.filter(r => r.stage === cur.stage && r.unit === cur.unit && r.category !== '수자원');
-    box.innerHTML = `<b>${esc(lbl(cur))}</b><div class="hint" style="margin:2px 0 8px">계수 기준 1 ${esc(cur.unit)} · 동일 단계·동일 단위 항목 내 위치(백분위)</div>` + IMP.map((im, j) => {
+    box.innerHTML = `<b>${esc(lbl(cur))}</b><div class="hint" style="margin:2px 0 8px">계수는 1 ${esc(cur.unit)}당 값이며, 오른쪽은 같은 대분류·같은 단위 항목 중 위치(백분위)입니다</div>` + IMP.map((im, j) => {
       const v = cur.v[j], refv = same.filter(r => r.v[j] != null).map(r => r.v[j]);
       const head = `<span>${im.name}<small class="muted" style="display:block;font-size:11px">${im.sym}</small></span>`;
       if (v == null) return `<div class="prev-row">${head}<span class="muted">결측</span><span></span><span></span></div>`;
-      if (refv.length < 10) return `<div class="prev-row">${head}<b>${fmt(v)}</b><span class="muted" style="grid-column:3/5;font-size:12px">비교 가능 항목 ${refv.length}건 (위치 산출 생략)</span></div>`;
+      if (refv.length < 10) return `<div class="prev-row">${head}<b>${fmt(v)}</b><span class="muted" style="grid-column:3/5;font-size:12px">비교 대상 ${refv.length}건뿐이라 위치 생략</span></div>`;
       const p = S.percentile(refv, v);
       return `<div class="prev-row">${head}<b>${fmt(v)}</b><div class="bar" aria-hidden="true"><i style="width:${p.toFixed(0)}%"></i></div><span><b>${L.topLabel(p)}</b><small class="muted"> n=${refv.length}</small></span></div>`;
     }).join('');
@@ -75,7 +75,7 @@
   function toast(msg) { const t = $('toast'); t.innerHTML = `<div class="toast">${msg}</div>`; clearTimeout(toast.t); toast.t = setTimeout(() => (t.innerHTML = ''), 3500); }
   function add() {
     if (!cur) return; const amt = parseFloat($('amount').value), unit = $('unit').value;
-    if (!(amt > 0)) { $('amount').setCustomValidity('0보다 큰 값을 입력하십시오'); $('amount').reportValidity(); $('amount').setCustomValidity(''); return; }
+    if (!(amt > 0)) { $('amount').setCustomValidity('0보다 큰 값을 입력해 주세요'); $('amount').reportValidity(); $('amount').setCustomValidity(''); return; }
     const ex = basket.find(b => b.id === cur.id && b.unit === unit);
     if (ex) ex.amount += amt; else basket.push({ uid: uid++, id: cur.id, amount: amt, unit });
     save(); renderBasket();
@@ -96,7 +96,7 @@
     $('basket').innerHTML = res.length ? res.map(({ b, row }) => `<div class="item" data-u="${b.uid}"><div class="item-top"><div><b>${esc(lbl(row))}</b><small>${esc(row.stage)} › ${esc(row.category)} · 계수 기준 ${esc(row.unit)}</small></div>
       <input type="number" min="0" step="any" value="${b.amount}" data-amt="${b.uid}" aria-label="사용량"><select data-unit="${b.uid}" aria-label="단위">${unitsOf(row).map(u => `<option${u === b.unit ? ' selected' : ''}>${esc(u)}</option>`).join('')}</select>
       <div class="row" style="gap:6px"><button class="btn sub sm" data-alt="${b.uid}">${altOpen.has(b.uid) ? '대체 검토 닫기' : '대체 검토'}</button><button class="btn sub sm" data-del="${b.uid}">삭제</button></div></div>${altOpen.has(b.uid) ? `<div class="alt" id="alt${b.uid}"></div>` : ''}</div>`).join('')
-      : '<div class="empty">계산 목록이 비어 있습니다. 좌측에서 항목을 선택해 추가하십시오.</div>';
+      : '<div class="empty">계산 목록이 비어 있습니다. 왼쪽에서 항목을 골라 추가해 보세요.</div>';
     $('basket').querySelectorAll('[data-amt]').forEach(el => el.onchange = () => { const b = basket.find(x => x.uid === +el.dataset.amt), v = parseFloat(el.value); if (b && v > 0) { b.amount = v; save(); renderResults(); renderAlts(); } else if (b) el.value = b.amount; });
     $('basket').querySelectorAll('[data-unit]').forEach(el => el.onchange = () => { const b = basket.find(x => x.uid === +el.dataset.unit); if (b) { b.unit = el.value; save(); renderResults(); renderAlts(); } });
     $('basket').querySelectorAll('[data-del]').forEach(el => el.onclick = () => { basket = basket.filter(x => x.uid !== +el.dataset.del); altOpen.delete(+el.dataset.del); save(); renderBasket(); });
@@ -118,9 +118,9 @@
           const a = row.v[j], c = alt.v[j]; if (a == null || c == null) return `<tr><td>${im.name}</td><td class="num muted">${a == null ? '결측' : fmt(a * qty)}</td><td class="num muted">${c == null ? '결측' : fmt(c * qty)}</td><td class="num muted">비교 불가</td></tr>`;
           const d = (c - a) / a * 100;
           return `<tr><td>${im.name} <small class="muted">${im.sym}</small></td><td class="num">${fmt(a * qty)}</td><td class="num">${fmt(c * qty)}</td><td class="num"><span class="delta ${d > 0 ? 'up' : 'down'}">${d > 0 ? '▲' : '▼'} ${Math.abs(d) >= 1000 ? Math.round(Math.abs(d)).toLocaleString('ko-KR') : Math.abs(d).toFixed(Math.abs(d) < 10 ? 1 : 0)}%</span></td></tr>`;
-        }).join('')}</tbody></table><div class="row" style="margin-top:10px"><button class="btn sm" data-apply="${u}">대체 후보로 교체</button></div><p class="hint">동일 수량·동일 기준 단위를 가정한 단순 비교입니다. 기능 동등성(성능, 수명 등)은 반영하지 않습니다.</p>`;
+        }).join('')}</tbody></table><div class="row" style="margin-top:10px"><button class="btn sm" data-apply="${u}">대체 후보로 교체</button></div><p class="hint">같은 수량·같은 단위로 바꿨을 때의 단순 비교입니다. 성능·수명 같은 기능 차이는 반영하지 않습니다.</p>`;
       }
-      box.innerHTML = `<label for="altsel${u}">대체 후보 (${esc(row.stage)} · ${esc(row.unit)} 기준, 동일 구분 우선)</label><select id="altsel${u}"><option value="">선택하십시오</option>${groups.map(g => `<optgroup label="${esc(g)}">${cands.filter(r => r.category === g).sort((a, c) => a.v[0] - c.v[0]).map(r => `<option value="${r.id}"${sel === r.id ? ' selected' : ''}>${esc(r.stage === '원료 및 에너지 생산' ? r.name : r.category + ' · ' + r.name)} (탄소 ${fmt(r.v[0])})</option>`).join('')}</optgroup>`).join('')}</select>${tbl}`;
+      box.innerHTML = `<label for="altsel${u}">대체 후보 (${esc(row.stage)} · ${esc(row.unit)} 기준, 같은 구분이 먼저 나옵니다)</label><select id="altsel${u}"><option value="">선택하세요</option>${groups.map(g => `<optgroup label="${esc(g)}">${cands.filter(r => r.category === g).sort((a, c) => a.v[0] - c.v[0]).map(r => `<option value="${r.id}"${sel === r.id ? ' selected' : ''}>${esc(r.stage === '원료 및 에너지 생산' ? r.name : r.category + ' · ' + r.name)} (탄소 ${fmt(r.v[0])})</option>`).join('')}</optgroup>`).join('')}</select>${tbl}`;
       $('altsel' + u).onchange = e => { altSel[u] = e.target.value === '' ? null : +e.target.value; renderAlts(); };
       const ap = box.querySelector('[data-apply]'); if (ap) ap.onclick = () => { b.id = alt.id; b.unit = alt.unit === row.unit ? b.unit : alt.unit; altSel[u] = null; save(); renderBasket(); };
     }
@@ -136,36 +136,36 @@
     const dlt = j => { if (!baseline || baseline.tot[j] == null || !tot[j].n) return ''; const d = (tot[j].sum - baseline.tot[j]) / baseline.tot[j] * 100; if (Math.abs(d) < 0.05) return '<span class="delta muted">기준안 대비 변화 없음</span>'; return `<span class="delta ${d > 0 ? 'up' : 'down'}">기준안 대비 ${d > 0 ? '▲' : '▼'} ${Math.abs(d).toFixed(Math.abs(d) < 10 ? 1 : 0)}%</span>`; };
     const partial = tot.some(t => t.n && t.n < t.all);
     // 규모 환산
-    const eqCard = (list, total, part) => list.map(e => `<div class="eqc"><span>${e.label}</span><b>${fmt(total / e.per)}<small style="display:inline;font-size:14px;color:var(--muted);margin-left:4px">${e.unit}</small></b><small>${esc(e.note)}<br>출처: ${esc(e.src)}</small></div>`).join('');
-    const eq = (tot[0].n ? `<h4 style="margin:0 0 8px">탄소발자국 ${fmt(tot[0].sum)} kg CO₂ eq의 규모${tot[0].n < tot[0].all ? ' (결측 제외 부분합계 기준)' : ''}</h4><div class="eq">${eqCard(L.EQ.carbon, tot[0].sum)}</div>` : '')
-      + (tot[4].n ? `<h4 style="margin:18px 0 8px">물소모 ${fmt(tot[4].sum)} m³ H₂O eq의 규모${tot[4].n < tot[4].all ? ' (결측 제외 부분합계 기준)' : ''}</h4><div class="eq">${eqCard(L.EQ.water, tot[4].sum)}</div>` : '');
+    const eqCard = (list, total, part) => list.map(e => `<div class="eqc"><span>${e.label}</span><b>${fmt(total / e.per)}<small style="display:inline;font-size:14px;color:var(--muted);margin-left:4px">${e.unit}</small></b><small>${esc(e.basis)}</small></div>`).join('');
+    const eq = (tot[0].n ? `<h4 style="margin:0 0 8px">탄소발자국 ${fmt(tot[0].sum)} kg CO₂ eq는 이런 규모입니다${tot[0].n < tot[0].all ? ' (결측 제외 부분합계 기준)' : ''}</h4><div class="eq">${eqCard(L.EQ.carbon, tot[0].sum)}</div>` : '')
+      + (tot[4].n ? `<h4 style="margin:18px 0 8px">물소모 ${fmt(tot[4].sum)} m³ H₂O eq는 이런 규모입니다${tot[4].n < tot[4].all ? ' (결측 제외 부분합계 기준)' : ''}</h4><div class="eq">${eqCard(L.EQ.water, tot[4].sum)}</div>` : '');
     // 원료 분포 내 위치 (모든 항목이 원료 단계 kg 기준일 때)
     let lvl = '';
     if (res.every(x => x.row.stage === '원료 및 에너지 생산' && x.row.unit === 'kg')) {
       const mass = res.reduce((s, x) => s + x.qty, 0);
       const rows = [0, 1, 2, 3, 4, 5].map(j => { if (tot[j].n < tot[j].all) return null; const v = tot[j].sum / mass, ref = L.col(POOL, j).map(r => r.v[j]); if (!(v > 0) || ref.length < 10) return null; return { j, v, p: S.percentile(ref, v), mid: S.median(ref) }; }).filter(Boolean);
-      if (rows.length) lvl = `<h4 style="margin:18px 0 6px">원료 평가계수 분포 내 위치 <small class="muted">(혼합물 ${fmt(mass)} kg의 kg당 환산값 vs 원료 ${POOL.length}종)</small></h4><table class="tbl"><thead><tr><th>영향범주</th><th class="num">kg당 값</th><th class="num">원료 중앙값 대비</th><th>분포 내 위치</th></tr></thead><tbody>${rows.map(r => `<tr><td>${IMP[r.j].name}</td><td class="num">${fmt(r.v)}</td><td class="num">${L.fx(r.v / r.mid)}</td><td style="width:36%"><div class="bar"><i style="width:${r.p.toFixed(0)}%"></i></div></td><td>${L.topLabel(r.p)}</td></tr>`).join('')}</tbody></table><p class="hint">모든 영향범주 값이 있는 항목 조합에 한해 산출합니다. 질량 가중 평균 집약도입니다.</p>`;
+      if (rows.length) lvl = `<h4 style="margin:18px 0 6px">원료 ${POOL.length}종과 비교한 위치(백분위) <small class="muted">· 혼합물 ${fmt(mass)} kg의 kg당 환산값 기준</small></h4><table class="tbl"><thead><tr><th>영향범주</th><th class="num">kg당 값</th><th class="num">원료 중앙값 대비</th><th>전체 중 위치</th></tr></thead><tbody>${rows.map(r => `<tr><td>${IMP[r.j].name}</td><td class="num">${fmt(r.v)}</td><td class="num">${L.fx(r.v / r.mid)}</td><td style="width:36%"><div class="bar"><i style="width:${r.p.toFixed(0)}%"></i></div></td><td>${L.topLabel(r.p)}</td></tr>`).join('')}</tbody></table><p class="hint">백분위는 ‘전체 원료 중 어디쯤인가’를 뜻합니다(예: 상위 10% = 계수가 큰 쪽 10% 안). 질량으로 가중평균한 kg당 값을 사용했고, 모든 항목의 값이 있는 범주만 표시합니다.</p>`;
     }
     box.innerHTML = `<div class="metrics">${IMP.map((im, j) => {
       const t = tot[j];
-      if (!t.n) return `<div class="metric na"><span>${im.name}</span><strong>결측</strong><small>선택 항목 전체 결측</small></div>`;
-      return `<div class="metric"><span>${im.name}${t.n < t.all ? '<em class="part" title="결측 항목이 합계에서 제외됨">부분합계</em>' : ''}</span><strong>${fmt(t.sum)}</strong><small>${im.sym}${t.n < t.all ? ` · ${t.all}건 중 ${t.n}건 반영` : ''}</small>${dlt(j)}</div>`;
+      if (!t.n) return `<div class="metric na"><span>${im.name}</span><strong>결측</strong><small>선택한 항목 모두 값이 비어 있음</small></div>`;
+      return `<div class="metric"><span>${im.name}${t.n < t.all ? '<em class="part" title="결측 항목이 합계에서 제외됨">부분합계</em>' : ''}</span><strong>${fmt(t.sum)}<em class="u">${im.sym}</em></strong><small>${t.n < t.all ? `${t.all}건 중 ${t.n}건 반영` : `${t.all}건 모두 반영`}</small>${dlt(j)}</div>`;
     }).join('')}</div>
-    ${partial ? '<div class="caution">‘부분합계’ 범주는 결측 항목이 합계에서 제외되어 실제 값보다 과소 산정될 수 있습니다. 결측값을 0으로 대체하지 않았습니다.</div>' : ''}
-    ${baseline ? `<p class="hint">기준안: 저장 시점 ${baseline.n}건 구성의 합계입니다. 수량·항목을 바꾸면 변화율이 즉시 갱신됩니다.</p>` : ''}
-    <h4 style="margin:24px 0 8px">규모 환산 (참고)</h4>${eq}<p class="hint">${esc(L.EQ_NOTE)}</p>${lvl}
-    <div class="row" style="margin:24px 0 8px;align-items:center"><h4 style="margin:0">기여도 분석</h4><div style="width:200px"><select id="impSel" aria-label="영향범주 선택">${IMP.map((im, j) => `<option value="${j}"${j === impactSel ? ' selected' : ''}>${im.name}</option>`).join('')}</select></div></div>
+    ${partial ? '<div class="caution">‘부분합계’ 범주는 값이 비어 있는(결측) 항목이 합계에서 빠져 있어 실제보다 작게 계산될 수 있습니다. 결측을 0으로 바꾸어 넣지는 않았습니다.</div>' : ''}
+    ${baseline ? `<p class="hint">기준안은 저장한 시점의 ${baseline.n}건 구성입니다. 수량이나 항목을 바꾸면 기준안 대비 변화율이 바로 갱신됩니다.</p>` : ''}
+    <h4 style="margin:24px 0 8px">일상 속 규모로 환산하면</h4>${eq}<p class="hint">${esc(L.EQ_NOTE)} <a href="#notes" data-go="notes">방법·출처 보기</a></p>${lvl}
+    <div class="row" style="margin:24px 0 8px;align-items:center"><h4 style="margin:0">기여도 분석 <small class="muted" style="font-weight:500">(어느 항목이 결과를 좌우하는가, hotspot)</small></h4><div style="width:200px"><select id="impSel" aria-label="영향범주 선택">${IMP.map((im, j) => `<option value="${j}"${j === impactSel ? ' selected' : ''}>${im.name}</option>`).join('')}</select></div></div>
     <div id="bars"></div>
-    <div class="row" style="margin:24px 0 8px;justify-content:space-between;align-items:center"><h4 style="margin:0">산정 상세</h4><button class="btn sm" id="export">CSV 저장</button></div>
+    <div class="row" style="margin:24px 0 8px;justify-content:space-between;align-items:center"><h4 style="margin:0">항목별 산정 상세</h4><button class="btn sm" id="export">CSV 저장</button></div>
     <div class="scroll"><table class="tbl"><thead><tr><th>항목</th><th class="num">환산량</th>${IMP.map(im => `<th class="num">${im.name}<br><small>${im.sym}</small></th>`).join('')}</tr></thead><tbody>${res.map(x => `<tr><td>${esc(lbl(x.row))}</td><td class="num">${fmt(x.qty)} ${esc(x.row.unit)}</td>${x.v.map(v => `<td class="num${v == null ? ' muted' : ''}">${fmt(v)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
     $('impSel').onchange = () => { impactSel = +$('impSel').value; drawBars(res); };
     $('export').onclick = () => exportCsv(res, tot); drawBars(res);
   }
   function drawBars(res) {
     const j = impactSel, have = res.filter(x => x.v[j] != null && x.v[j] > 0), sum = have.reduce((s, x) => s + x.v[j], 0);
-    if (!have.length) { $('bars').innerHTML = '<p class="muted">선택한 범주는 계산 목록 전체가 결측입니다.</p>'; return; }
+    if (!have.length) { $('bars').innerHTML = '<p class="muted">선택한 영향범주는 계산 목록 전체가 결측이라 기여도를 계산할 수 없습니다.</p>'; return; }
     const sorted = [...have].sort((a, b) => b.v[j] - a.v[j]), top = sorted[0], tp = top.v[j] / sum * 100;
-    $('bars').innerHTML = (have.length > 1 ? `<p style="margin:0 0 8px"><b>${IMP[j].name}</b>의 <b>${tp.toFixed(0)}%</b>가 <b>${esc(lbl(top.row))}</b>에서 발생합니다(기여도 1위).</p>` : '') + sorted.map(x => { const p = x.v[j] / sum * 100; return `<div class="hbar"><span>${esc(lbl(x.row))}</span><div class="bar"><i style="width:${p.toFixed(1)}%"></i></div><span class="num"><b>${p < 0.05 ? '0.1% 미만' : p.toFixed(p < 10 ? 1 : 0) + '%'}</b></span></div>`; }).join('') + `<p class="hint">값이 있는 ${have.length}건 기준${have.length < res.length ? ` (${res.length - have.length}건 결측 제외)` : ''}</p>`;
+    $('bars').innerHTML = (have.length > 1 ? `<p style="margin:0 0 8px"><b>${IMP[j].name}</b>의 <b>${tp.toFixed(0)}%</b>가 <b>${esc(lbl(top.row))}</b>에서 발생합니다(기여도 1위).</p>` : '') + sorted.map(x => { const p = x.v[j] / sum * 100; return `<div class="hbar"><span>${esc(lbl(x.row))}</span><div class="bar"><i style="width:${p.toFixed(1)}%"></i></div><span class="num"><b>${p < 0.05 ? '0.1% 미만' : p.toFixed(p < 10 ? 1 : 0) + '%'}</b></span></div>`; }).join('') + `<p class="hint">값이 있는 ${have.length}건 기준${have.length < res.length ? ` · ${res.length - have.length}건은 결측이라 제외` : ''}</p>`;
   }
   function exportCsv(res, tot) {
     const cell = v => { let s = v == null ? '' : String(v); if (typeof v === 'string' && /^[=+\-@\t\r]/.test(s)) s = "'" + s; return '"' + s.replace(/"/g, '""') + '"'; };

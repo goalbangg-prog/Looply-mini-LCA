@@ -45,6 +45,8 @@
     lay.margin = Object.assign({}, base.margin, (layout || {}).margin || {});
     Plotly.newPlot(el, traces, lay, Object.assign({ displayModeBar: false, responsive: true }, extra || {}));
   };
+  // 차트 영역에 안내 문구를 넣기 전에 기존 차트를 정리한다(문구와 차트가 겹치지 않도록)
+  L.purge = id => { const el = L.$(id); if (!el) return; try { if (window.Plotly) Plotly.purge(el); } catch (e) { } el.classList.remove('js-plotly-plot'); el.innerHTML = ''; };
   L.resizeAll = root => { if (!window.Plotly) return; (root || document).querySelectorAll('.js-plotly-plot').forEach(el => { try { Plotly.Plots.resize(el); } catch (e) { } }); };
   L.opts = (sel, list, valueFn, textFn, keep) => {
     const prev = keep ? sel.value : null;
@@ -57,11 +59,11 @@
   L.clusterTitle = (ratios, names) => {
     const o = ratios.map((v, i) => ({ n: names[i], v })).sort((a, b) => b.v - a.v);
     const two = o.slice(0, 2).map(x => `${x.n} ${L.fx(x.v)}`).join(', ');
-    if (o[0].v < 1) return { title: '전 범주 저위 군집', line: '모든 영향범주가 전체 중앙값 미만입니다.' };
+    if (o[0].v < 1) return { title: '전 범주 낮음 군집', line: '모든 영향범주가 전체 중앙값보다 낮습니다.' };
     const big = o.filter(x => x.v >= 5);
-    if (big.length) return { title: big.slice(0, 2).map(x => x.n).join('·') + ' 고위 군집', line: `전체 중앙값 대비 <b>${two}</b>로 특정 범주가 두드러집니다.` };
-    if (o[0].v >= 2) return { title: '일부 범주 상위 군집', line: `전체 중앙값 대비 <b>${two}</b>입니다.` };
-    return { title: '중위 군집', line: `전체 중앙값과 유사한 수준입니다(최대 편차: ${o[0].n} ${L.fx(o[0].v)}).` };
+    if (big.length) return { title: big.slice(0, 2).map(x => x.n).join('·') + ' 수치가 두드러진 군집', line: `전체 중앙값의 <b>${two}</b>로, 이 범주들이 유난히 큽니다.` };
+    if (o[0].v >= 2) return { title: '일부 범주가 높은 군집', line: `전체 중앙값의 <b>${two}</b> 수준입니다.` };
+    return { title: '중간 수준 군집', line: `전체 중앙값과 비슷합니다(가장 큰 차이: ${o[0].n} ${L.fx(o[0].v)}).` };
   };
   L.coverageOK = s => L.IMP.filter((_, j) => L.coverage(s.rows, j) >= .5).length;
   L.topLabel = p => (p >= 50 ? `상위 ${Math.max(1, Math.round(100 - p))}%` : `하위 ${Math.max(1, Math.round(p))}%`);
